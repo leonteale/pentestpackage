@@ -1,0 +1,60 @@
+<?xml version="1.0" standalone="yes"?>
+<dsfepstools xmlns="http://tempuri.org/fepstools.xsd">
+  <General>
+    <OpenLastUsedTab>true</OpenLastUsedTab>
+    <LastUsedTab>10</LastUsedTab>
+    <PsToolsDir>D:\SHARED\Tools\pentestpackage\Windows_just_runs\fepstools</PsToolsDir>
+    <Computer />
+    <Username />
+    <Password />
+    <ComputerList>D:\SHARED\Clients\Agenta_Managment_resources\July2016\Internal\livescope.txt</ComputerList>
+    <UseFile>true</UseFile>
+    <OutputWindowColor>1</OutputWindowColor>
+    <AcceptEula>true</AcceptEula>
+    <HidePassword>true</HidePassword>
+  </General>
+  <PsService>
+    <ServiceName />
+    <SvcCommand />
+    <StartupType />
+    <QueryGroup />
+    <QueryType />
+    <QueryState />
+  </PsService>
+  <PsExec>
+    <RunAsSystem>false</RunAsSystem>
+    <LoadAccountProfile>false</LoadAccountProfile>
+    <InteractDesktop>true</InteractDesktop>
+    <CopyProgram>false</CopyProgram>
+    <ForceCopy>false</ForceCopy>
+    <CopyOnlyIfNewer>false</CopyOnlyIfNewer>
+    <DontWait>true</DontWait>
+    <WorkingDirectory />
+    <Priority>low</Priority>
+    <Processors />
+    <Arguments />
+    <Account />
+    <Program />
+    <InteractDesktopSession />
+    <ConnectionTimeout>-1</ConnectionTimeout>
+    <DisplayOnWinlogon>false</DisplayOnWinlogon>
+    <RunAsLimitedUser>false</RunAsLimitedUser>
+  </PsExec>
+  <PsLoggedOn>
+    <LgdOnComputer />
+    <LgdOnUsername />
+    <ShowLocalOnly>false</ShowLocalOnly>
+    <DontShowLogonTimes>false</DontShowLogonTimes>
+  </PsLoggedOn>
+  <PsList>
+    <ShowActiveThreads>false</ShowActiveThreads>
+    <ShowMemInfo>false</ShowMemInfo>
+    <ShowExtended>false</ShowExtended>
+    <ShowProcessTree>false</ShowProcessTree>
+    <TaskManMode>false</TaskManMode>
+    <TaskManModeSeconds>0</TaskManModeSeconds>
+    <TaskManModeRefreshRate>0</TaskManModeRefreshRate>
+    <ProcessName />
+    <ProcessId />
+  </PsList>
+</dsfepstools>
