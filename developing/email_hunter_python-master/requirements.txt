@@ -1,0 +1,4 @@
+py==1.4.30
+pypandoc==1.1.2
+pytest==2.8.2
+requests==2.8.1
