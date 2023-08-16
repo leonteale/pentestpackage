@@ -1,0 +1,343 @@
+
+# data we need for socket based handshakes
+# see #807 and #806 (especially
+# https://github.com/drwetter/testssl.sh/issues/806#issuecomment-318686374)
+
+# All 5 ciphers defined for TLS 1.3
+readonly TLS13_CIPHER="
+13,01, 13,02, 13,03, 13,04, 13,05"
+
+# 123 standard cipher + 4x GOST for TLS 1.2 and SPDY/NPN HTTP2/ALPN
+declare TLS12_CIPHER="
+c0,30, c0,2c, c0,28, c0,24, c0,14, c0,0a, 00,9f, 00,6b,
+00,39, 00,9d, 00,3d, 00,35, c0,2f, c0,2b, c0,27, c0,23,
+c0,13, c0,09, 00,9e, 00,67, 00,33, 00,9c, 00,3c, 00,2f,
+cc,a9, cc,a8, cc,aa, cc,14, cc,13, cc,15, 00,a5, 00,a3,
+00,a1, 00,6a, 00,69, 00,68, 00,38, 00,37, 00,36, c0,77,
+c0,73, 00,c4, 00,c3, 00,c2, 00,c1, 00,88, 00,87, 00,86,
+00,85, c0,32, c0,2e, c0,2a, c0,26, c0,0f, c0,05, c0,79,
+c0,75, 00,c0, 00,84, 00,a4, 00,a2, 00,a0, 00,40, 00,3f,
+00,3e, 00,32, 00,31, 00,30, c0,76, c0,72, 00,be, 00,bd,
+00,bc, 00,bb, 00,9a, 00,99, 00,98, 00,97, 00,45, 00,44,
+00,43, 00,42, c0,31, c0,2d, c0,29, c0,25, c0,0e, c0,04,
+c0,78, c0,74, 00,ba, 00,96, 00,41, 00,07, c0,11, c0,07,
+00,66, c0,0c, c0,02, 00,05, 00,04, c0,12, c0,08, 00,16,
+00,13, 00,10, 00,0d, c0,0d, c0,03, 00,0a, 00,80, 00,81,
+00,82, 00,83, 00,63, 00,15, 00,12, 00,0f, 00,0c, 00,62,
+00,09, 00,65, 00,64, 00,14, 00,11, 00,08, 00,03, 00,ff"
+
+# 127 less common ciphers for TLS 1.2 and SPDY/NPN HTTP2/ALPN
+readonly TLS12_CIPHER_2ND_TRY="
+c0,22, c0,21, c0,20, 00,b7, 00,b3, 00,91, c0,9b, c0,99,
+c0,97, 00,af, c0,95, c0,af, c0,ad, c0,a3, c0,9f, c0,19,
+00,a7, 00,6d, 00,3a, 00,c5, 00,89, 00,ad, 00,ab, cc,ae,
+cc,ad, cc,ac, c0,ab, c0,a7, c0,a1, c0,9d, 00,a9, cc,ab,
+c0,a9, c0,a5, c0,38, c0,36, 00,95, 00,8d, ff,00, ff,01,
+ff,02, ff,03, ff,85, c0,1f, c0,1e, c0,1d, c0,ae, c0,ac,
+c0,a2, c0,9e, 00,ac, 00,aa, c0,aa, c0,a6, c0,a0, c0,9c,
+00,a8, c0,a8, c0,a4, c0,18, 00,a6, 00,6c, 00,34, 00,bf,
+00,9b, 00,46, c0,37, c0,35, 00,b6, 00,b2, 00,90, c0,9a,
+c0,98, c0,96, 00,ae, c0,94, 00,94, 00,8c, 00,21, 00,25,
+c0,16, 00,18, 00,92, 00,8a, 00,20, 00,24, c0,33, 00,8e,
+c0,1c, c0,1b, c0,1a, c0,17, 00,1b, 00,93, 00,8b, 00,1f,
+00,23, c0,34, 00,8f, 00,1a, 00,61, 00,60, 00,19, 00,06,
+00,0b, 00,0e, 00,17, c0,10, c0,06, c0,15, c0,0b, c0,01,
+c0,3b, c0,3a, c0,39, 00,b9, 00,b8, 00,b5, 00,b4, 00,2e,
+00,2d, 00,b1, 00,b0, 00,2c, 00,3b, 00,02, 00,01, 00,ff"
+
+# 97 less common ciphers for TLS 1.2 and SPDY/NPN HTTP2/ALPN
+readonly TLS12_CIPHER_3RD_TRY="
+c0,3d, c0,3f, c0,41, c0,43, c0,45, c0,47, c0,49, c0,4b,
+c0,4d, c0,4f, c0,51, c0,53, c0,55, c0,57, c0,59, c0,5b,
+c0,5d, c0,5f, c0,61, c0,63, c0,65, c0,67, c0,69, c0,6b,
+c0,6d, c0,6f, c0,71, c0,7b, c0,7d, c0,7f, c0,81, c0,83,
+c0,85, c0,87, c0,89, c0,8b, c0,8d, c0,8f, c0,91, c0,93,
+16,b7, 16,b8, 16,b9, 16,ba, c0,3c, c0,3e, c0,40, c0,42,
+c0,44, c0,46, c0,48, c0,4a, c0,4c, c0,4e, c0,50, c0,52,
+c0,54, c0,56, c0,58, c0,5a, c0,5c, c0,5e, c0,60, c0,62,
+c0,64, c0,66, c0,68, c0,6a, c0,6c, c0,6e, c0,70, c0,7a,
+c0,7c, c0,7e, c0,80, c0,82, c0,84, c0,86, c0,88, c0,8a,
+c0,8c, c0,8e, c0,90, c0,92, fe,ff, ff,e0, 00,1e, 00,22,
+fe,fe, ff,e1, 00,27, 00,26, 00,2a, 00,29, 00,28, 00,2b,
+ff,87, 00,ff"
+
+# 76 standard cipher + 4x GOST for SSLv3, TLS 1, TLS 1.1
+readonly TLS_CIPHER="
+c0,14, c0,0a, c0,22, c0,21, c0,20, 00,39, 00,38, 00,37,
+00,36, 00,88, 00,87, 00,86, 00,85, c0,0f, c0,05, 00,35,
+00,84, c0,13, c0,09, c0,1f, c0,1e, c0,1d, 00,33, 00,32, 00,80, 00,81, 00,82, 00,83,
+00,31, 00,30, 00,9a, 00,99, 00,98, 00,97, 00,45, 00,44,
+00,43, 00,42, c0,0e, c0,04, 00,2f, 00,96, 00,41, 00,07,
+c0,11, c0,07, 00,66, c0,0c, c0,02, 00,05, 00,04, c0,12,
+c0,08, c0,1c, c0,1b, c0,1a, 00,16, 00,13, 00,10, 00,0d,
+c0,0d, c0,03, 00,0a, 00,63, 00,15, 00,12, 00,0f, 00,0c,
+00,62, 00,09, 00,65, 00,64, 00,14, 00,11, 00,0e, 00,0b,
+00,08, 00,06, 00,03, 00,ff"
+
+readonly -a TLS13_KEY_SHARES=(
+ "0" "1" "2" "3" "4" "5" "6" "7" "8" "9" "a" "b" "c" "d" "e" "f"
+  "10" "11" "12" "13" "14"
+"-----BEGIN EC PARAMETERS-----
+BgUrgQQAIQ==
+-----END EC PARAMETERS-----
+-----BEGIN EC PRIVATE KEY-----
+MGgCAQEEHC8WEqbfOOQ1MfH86LnVfxLqdZ71D8nPZPKjruCgBwYFK4EEACGhPAM6
+AAR2uBbfubYkb0UkaigsichnMJNSfeh8NB1nXMHaOkW82gKLxrydB1PZfyRZwhkU
+kKeLdXY4eWKxUw==
+-----END EC PRIVATE KEY-----
+" "16"
+"-----BEGIN EC PARAMETERS-----
+BggqhkjOPQMBBw==
+-----END EC PARAMETERS-----
+-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEIA6YyVcGYcFBFeH3RKz7d4WI9ylTcWYRY4XkzSa0kcmBoAoGCCqGSM49
+AwEHoUQDQgAEtCTvEZmcpOjOiCXDjnwMapTeM23/zRe3XGXb0VhGlWmAyLz85tki
+Obs/Y6s9XLrM6xqQG9R1/1jEAFhQIdCq5A==
+-----END EC PRIVATE KEY-----
+"
+"-----BEGIN EC PARAMETERS-----
+BgUrgQQAIg==
+-----END EC PARAMETERS-----
+-----BEGIN EC PRIVATE KEY-----
+MIGkAgEBBDA7MCUdHy2+Kc73fWph++jWo18LHzzm7SKLgycQBNtmeJu3w1y9pK0G
+EXgAWsIePIOgBwYFK4EEACKhZANiAAT/x7tN8plE6gbA6D4Igp3ash5EvZxvNqdG
+Q50fcDrIco91ybaVlg2tdngZgurTzte+jv7kdkYrILUmLnXxAUGg4d86yStfcZaI
+rDEB8Hc9BgJkFFoLSsXMVCKfoEo777k=
+-----END EC PRIVATE KEY-----
+"
+"-----BEGIN EC PARAMETERS-----
+BgUrgQQAIw==
+-----END EC PARAMETERS-----
+-----BEGIN EC PRIVATE KEY-----
+MIHbAgEBBEFjBqkejwKserOf+LoY6xeSUUoLSZQDz/oNLXLB3NQJ3ewDkhbjOvcL
+jG1on33V080fXRTN3eNdfvzcqDw4c0GGCKAHBgUrgQQAI6GBiQOBhgAEAHuBnMpQ
++30lnd/gWrHwjLrXQ+EwtxYzMjSDkfRxr0UQ0YuzDNzsVP0azylC06BUlcAvVgiX
++61BiUapw+37EORuAaHOlob0nobmFND7peN0YglQuBeSdqK3cbdP/u9jffGr2H99
+bONJgO7LSp05PXa79CEi8sydmKYiH1pSLAzRiQnh
+-----END EC PRIVATE KEY-----
+" "1a" "1b" "1c"
+"-----BEGIN PRIVATE KEY-----
+MC4CAQAwBQYDK2VuBCIEIDhCPq41ufKeHdfVAp6KeS7qo8E43pd+ee+npH0sOqxL
+-----END PRIVATE KEY-----
+"
+"-----BEGIN PRIVATE KEY-----
+MEYCAQAwBQYDK2VvBDoEONDoNojolTC5A5LwJmEfj/NqVrkG2PsagQ0IxZJcwyhC
+CrAkCbaEfSIdjRVr2ODIC8ByiHjIzqDu
+-----END PRIVATE KEY-----
+"
+"-----BEGIN PRIVATE KEY-----
+MIGIAgEAMBQGByqGSM49AgEGCSskAwMCCAEBBwRtMGsCAQEEID/S1T+6vhaiWJT6
+2qbAFBlBi7Bd2fe6eRJlw6I2zm0eoUQDQgAEdk7i/WWNR873mVlffUL/XYPW04fd
+eVf2KlfRUi8aoINfkxsw/yVVOuVfT8GivrEs1kT2iiy0Z+gyXDrYiSqP1w==
+-----END PRIVATE KEY-----
+"
+"-----BEGIN PRIVATE KEY-----
+MIG6AgEAMBQGByqGSM49AgEGCSskAwMCCAEBCwSBnjCBmwIBAQQwbV1IckTIgFs6
+YOOLLFeLmc6BLjqHUbLHLwZjI8TKNMIzYahhc9n5wgSyn+Psu3NWoWQDYgAEA/NN
+eFinukOQpX+Alpccd0NnRL59YdYmhI5VSdQECDyUym4hH2L7uHXdOZaC/qxvPQxz
+QDY3nqerDkwIB+rFj1qWOKzqyZt2KlVk2jE3Omsrhuo92Ai94X0LyW2SMRyh
+-----END PRIVATE KEY-----
+"
+"-----BEGIN PRIVATE KEY-----
+MIHsAgEAMBQGByqGSM49AgEGCSskAwMCCAEBDQSB0DCBzQIBAQRAmfrMGcK0wj3D
+QNMCwBQaQHY03cTJuQbjjFr1Mrqn73ARDxUel6xdklEWx3SE9gbG0KVGnCx/nslG
+xS6XqyNhhqGBhQOBggAEDjRvgELV732xXBsz5NJuirkmran6haJy2Phqqc4qPROm
+0iUjpSOrq0DV5MUE/0HhvzvOSqkSWr7nAefO1bovml+Fo5YT+KUsZJMYK7DlDtCb
+79ZjkNvTbrsL9GVNvOmyUJv+PyxG1Zn6OsIxck747cJ/IGeOv7hcA+/J728TfWk=
+-----END PRIVATE KEY-----
+"
+ "22" "23" "24" "25" "26" "27" "28" "29" "2a" "2b" "2c" "2d" "2e" "2f"
+ "30" "31" "32" "33" "34" "35" "36" "37" "38" "39" "3a" "3b" "3c" "3d" "3e" "3f"
+ "40" "41" "42" "43" "44" "45" "46" "47" "48" "49" "4a" "4b" "4c" "4d" "4e" "4f"
+ "50" "51" "52" "53" "54" "55" "56" "57" "58" "59" "5a" "5b" "5c" "5d" "5e" "5f"
+ "60" "61" "62" "63" "64" "65" "66" "67" "68" "69" "6a" "6b" "6c" "6d" "6e" "6f"
+ "70" "71" "72" "73" "74" "75" "76" "77" "78" "79" "7a" "7b" "7c" "7d" "7e" "7f"
+ "80" "81" "82" "83" "84" "85" "86" "87" "88" "89" "8a" "8b" "8c" "8d" "8e" "8f"
+ "90" "91" "92" "93" "94" "95" "96" "97" "98" "99" "9a" "9b" "9c" "9d" "9e" "9f"
+ "a0" "a1" "a2" "a3" "a4" "a5" "a6" "a7" "a8" "a9" "aa" "ab" "ac" "ad" "ae" "af"
+ "b0" "b1" "b2" "b3" "b4" "b5" "b6" "b7" "b8" "b9" "ba" "bb" "bc" "bd" "be" "bf"
+ "c0" "c1" "c2" "c3" "c4" "c5" "c6" "c7" "c8" "c9" "ca" "cb" "cc" "cd" "ce" "cf"
+ "d0" "d1" "d2" "d3" "d4" "d5" "d6" "d7" "d8" "d9" "da" "db" "dc" "dd" "de" "df"
+ "e0" "e1" "e2" "e3" "e4" "e5" "e6" "e7" "e8" "e9" "ea" "eb" "ec" "ed" "ee" "ef"
+ "f0" "f1" "f2" "f3" "f4" "f5" "f6" "f7" "f8" "f9" "fa" "fb" "fc" "fd" "fe" "ff"
+ "-----BEGIN PRIVATE KEY-----
+MIICJgIBADCCARcGCSqGSIb3DQEDATCCAQgCggEBAP//////////rfhUWKK7Spqv
+3FYgJz088di5xYPOLTaVqeE2QRRkM/vMk53OJJs++X0v42NjDHXY9oGyAq7EYXrT
+3x7V1f1lYSQz9R9fBm7QhWNlVT3tGvO1VxNef1fJNZhPDHDg5ot34qaJ2vPv6HId
+8VihNq3nNTCsyk9IOnl6vAqxgrMk+2HRCKlLssjj+7lq2rdg1/RoHU9Co945TfSu
+Vu3nY3K7GQsHp8juCm1wngL84c334uzANATNKDQvYZFy/pzphYP/jk8SMu7ygYPD
+/jsbTG+tczu1/LwuwiAFxY7xg30Wg7LG80omwbLv+ohrQjhhKFyX//////////8C
+AQIEggEEAoIBAEcs/BWUPK4VleD+MgvCzy7mxgcH8Qi9SmKHN4wBCT/ZNbVGiBuu
+LNji/hl/TA/6WZT7HIiX+wXhc0AKbcbmvES59FQIzuMZpwyoxzps7X19Zjrbn/TG
+Al9MfhQ4KttyqkY6oT3JNKdB9Kk4VTekqHdVOtgV3jC83AfhA/2S0LpzlZ6V9IAN
+6xt+IvpNgcBRTeBTgNZxArdpS6IIaNBGk/5anyuKdDWzUBwKbaJQzm18j/66bqOr
+TernVJ3Hyiq/h3AMPY73sIVpYmjQOOwX059mEn6buNsdTFrSayiSxsfEeMrZH/Jk
+11Vit9Z8+i0zUUWxyPDDqo+ji9nbUKA/Sfc=
+-----END PRIVATE KEY-----
+"
+"-----BEGIN PRIVATE KEY-----
+MIIDJgIBADCCAZcGCSqGSIb3DQEDATCCAYgCggGBAP//////////rfhUWKK7Spqv
+3FYgJz088di5xYPOLTaVqeE2QRRkM/vMk53OJJs++X0v42NjDHXY9oGyAq7EYXrT
+3x7V1f1lYSQz9R9fBm7QhWNlVT3tGvO1VxNef1fJNZhPDHDg5ot34qaJ2vPv6HId
+8VihNq3nNTCsyk9IOnl6vAqxgrMk+2HRCKlLssjj+7lq2rdg1/RoHU9Co945TfSu
+Vu3nY3K7GQsHp8juCm1wngL84c334uzANATNKDQvYZFy/pzphYP/jk8SMu7ygYPD
+/jsbTG+tczu1/LwuwiAFxY7xg30Wg7LG80omwbLv+ohrQjhhH8/c3jVbO2UZA1u8
+NPTe+ZwCOGG0b8nW5skHetkdJpH39+5ZjLD6wYbZHK7+EwmFE5JwtBMMk7xDeUT0
+/URS4tdN02Ty4h5x9Uv/XK6Cq5yd9p7obSvFIjY6DavFIZebDeraHb+aQtXESE4K
+vNBr+lPd7zwbIO4/1Z18JeQdK2bGLjf//////////wIBAgSCAYQCggGAW1x+826N
+psCeb2tfDTDARYQV4fNRFXEAfMORDlYZKr/wcgO1HJ552W4dbmo/kKq/PFBgXZpx
+FqREmBywG5vIBGJO0lVxCc74HANS05/HiL1hC0c5n2vcVWlmlhuUwVRQjPRarAPa
+x3SevWA7zzbZQP2yfynf2Nn60GkoGbgRZ4wNW6Q378WaF6csgbkRr3BOZLX8uRa/
+NnxtxsoaPiWlBE27maDbPrw14HbvWUb+ft/BVPOtKg1JJ0UT8oFP+zLEpyfjeU7P
+m1vauWXb1k1iVTTeUNq+47JwQA1ZWm3fWympNoQWeohueZiraN0BerhsvdHWqBwC
+6cs6RVmgzY7eiAL38bjZ7swn32th3crbSveCypw8vHW7zOMPr8e6i7NI12a9rAdi
+UbU7PXSm1IekMCtWCFQsPdXAc0TIhJY0hElnmjTVAXwP4NPwDlhgtv6x1OE7rr9v
+BXvMHpw4dVscRWNimLWhoRnPwWDoNZSaz/rw5vVr06NIucC3Riq+bnOE
+-----END PRIVATE KEY-----
+"
+"-----BEGIN PRIVATE KEY-----
+MIIEJgIBADCCAhcGCSqGSIb3DQEDATCCAggCggIBAP//////////rfhUWKK7Spqv
+3FYgJz088di5xYPOLTaVqeE2QRRkM/vMk53OJJs++X0v42NjDHXY9oGyAq7EYXrT
+3x7V1f1lYSQz9R9fBm7QhWNlVT3tGvO1VxNef1fJNZhPDHDg5ot34qaJ2vPv6HId
+8VihNq3nNTCsyk9IOnl6vAqxgrMk+2HRCKlLssjj+7lq2rdg1/RoHU9Co945TfSu
+Vu3nY3K7GQsHp8juCm1wngL84c334uzANATNKDQvYZFy/pzphYP/jk8SMu7ygYPD
+/jsbTG+tczu1/LwuwiAFxY7xg30Wg7LG80omwbLv+ohrQjhhH8/c3jVbO2UZA1u8
+NPTe+ZwCOGG0b8nW5skHetkdJpH39+5ZjLD6wYbZHK7+EwmFE5JwtBMMk7xDeUT0
+/URS4tdN02Ty4h5x9Uv/XK6Cq5yd9p7obSvFIjY6DavFIZebDeraHb+aQtXESE4K
+vNBr+lPd7zwbIO4/1Z18JeQdK2aeHvFub1LDFk30+3kw6eTliFe2rH1fQtafbRh3
+Y88dVQNABIf1W6V+Mcx6cTXIhu+0MYrtah4BLZ5oMqkHYAqRgTDEbcd4+XGtADgJ
+KZmjM8uLehoduT1xQAA8Kk7OqfmNCswKgpHNzsl9z47JtVp/iKRrTbWoUfRBguHG
+igB+XmVfav//////////AgECBIICBAKCAgBchieVrkn2z0jDeaUn9AWgtHX5Lk58
+CeaLG58CvnxAqR/Sxn5farEICapmWmVBQuJPO+KyLCbZgB/NRb3Miw+1sgnAbZ5e
+vsLdnjjgKOvrrug9WpCjwv+/r2l9CfHxxyHiik1GwkE6O1SNZQySqnBi5fN1wg0c
+wzMf4U527OP+n0vrlrztjWftd6k/3/WX4LiSugPGXOYTiu4EnNpVbgtsH3Eaz264
+KbhxBaH4T9jWN4Mrg8ZL9mT1r1IajGfE8dLverTJ2ZEy3SWdhyEawPHOET78KSq2
+Rgj6ZGDMTYcSuRbWY83x6JG/fOnHytA/Er+R5+Z8icD3kOwujyoaO1/WJfMMzNWY
+BXQI8b6EZGK/DXrqOTpZbxwJizw9jURF9Bp8j+BJnjl0c9K/l6jEJJqKqS2mgwWl
+GRD3yk8OBnRNWbDx/xWgpMUTkFjm+PGpdHHRpg1qVxVHp6eMiu8OF5I3mMA2rv9K
+aRDGTTbsRp169Wdv41Ap+T6RVYf4oCIGkuSpBm5F8K0J3x/rkiTxqZFnDiQopRog
+fksgVds2zBZQ/ibGHFhjJQCMthiuDR8zDvCCVFrR/MVBP4ZoGzT2YPVAAqSRZ4yx
+2Ou8gqO6axcRsfygvjDK5LhvjCI7f/ruyu6jaM5ZyfMe7BxMkujpcVsNB56e63NH
+Gq1noDIjPnTehQ==
+-----END PRIVATE KEY-----
+"
+"-----BEGIN PRIVATE KEY-----
+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
+-----END PRIVATE KEY-----
+"
+"-----BEGIN PRIVATE KEY-----
+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
+3V2dIgkNeXVF3JE975vjUf+yz1nrhVhdsD0=
+-----END PRIVATE KEY-----
+" "105" "106" "107" "108" "109" "10a" "10b" "10c" "10d" "10e" "10f" )
+
+# Public keys corresponding to the keys in TLS13_KEY_SHARES
+readonly -a TLS13_PUBLIC_KEY_SHARES=(
+ "0" "1" "2" "3" "4" "5" "6" "7" "8" "9" "a" "b" "c" "d" "e" "f"
+  "10" "11" "12" "13" "14"
+ "00,15,00,39,04,76,b8,16,df,b9,b6,24,6f,45,24,6a,28,2c,89,c8,67,30,93,52,7d,e8,7c,34,1d,67,5c,c1,da,3a,45,bc,da,02,8b,c6,bc,9d,07,53,d9,7f,24,59,c2,19,14,90,a7,8b,75,76,38,79,62,b1,53"
+ "16"
+ "00,17,00,41,04,b4,24,ef,11,99,9c,a4,e8,ce,88,25,c3,8e,7c,0c,6a,94,de,33,6d,ff,cd,17,b7,5c,65,db,d1,58,46,95,69,80,c8,bc,fc,e6,d9,22,39,bb,3f,63,ab,3d,5c,ba,cc,eb,1a,90,1b,d4,75,ff,58,c4,00,58,50,21,d0,aa,e4"
+ "00,18,00,61,04,ff,c7,bb,4d,f2,99,44,ea,06,c0,e8,3e,08,82,9d,da,b2,1e,44,bd,9c,6f,36,a7,46,43,9d,1f,70,3a,c8,72,8f,75,c9,b6,95,96,0d,ad,76,78,19,82,ea,d3,ce,d7,be,8e,fe,e4,76,46,2b,20,b5,26,2e,75,f1,01,41,a0,e1,df,3a,c9,2b,5f,71,96,88,ac,31,01,f0,77,3d,06,02,64,14,5a,0b,4a,c5,cc,54,22,9f,a0,4a,3b,ef,b9"
+ "00,19,00,85,04,00,7b,81,9c,ca,50,fb,7d,25,9d,df,e0,5a,b1,f0,8c,ba,d7,43,e1,30,b7,16,33,32,34,83,91,f4,71,af,45,10,d1,8b,b3,0c,dc,ec,54,fd,1a,cf,29,42,d3,a0,54,95,c0,2f,56,08,97,fb,ad,41,89,46,a9,c3,ed,fb,10,e4,6e,01,a1,ce,96,86,f4,9e,86,e6,14,d0,fb,a5,e3,74,62,09,50,b8,17,92,76,a2,b7,71,b7,4f,fe,ef,63,7d,f1,ab,d8,7f,7d,6c,e3,49,80,ee,cb,4a,9d,39,3d,76,bb,f4,21,22,f2,cc,9d,98,a6,22,1f,5a,52,2c,0c,d1,89,09,e1"
+ "1a" "1b" "1c"
+ "00,1d,00,20,4d,fa,57,44,b7,f7,48,b8,95,77,5a,c1,ff,86,bf,ae,f7,3a,33,69,54,de,6a,f5,2e,89,84,6c,f2,d8,b2,43"
+ "00,1e,00,38,6d,6d,67,a7,4e,3d,45,dd,ec,7e,a0,70,88,56,54,d8,c5,7c,4d,f3,8f,8b,f8,f2,14,06,1b,a0,4f,f7,ad,6b,3f,3a,90,42,41,8e,74,28,32,4a,a7,50,4a,7a,8e,42,55,eb,94,96,de,83,37,d6"
+ "00,1f,00,41,04,76,4e,e2,fd,65,8d,47,ce,f7,99,59,5f,7d,42,ff,5d,83,d6,d3,87,dd,79,57,f6,2a,57,d1,52,2f,1a,a0,83,5f,93,1b,30,ff,25,55,3a,e5,5f,4f,c1,a2,be,b1,2c,d6,44,f6,8a,2c,b4,67,e8,32,5c,3a,d8,89,2a,8f,d7"
+ "00,20,00,61,04,03,f3,4d,78,58,a7,ba,43,90,a5,7f,80,96,97,1c,77,43,67,44,be,7d,61,d6,26,84,8e,55,49,d4,04,08,3c,94,ca,6e,21,1f,62,fb,b8,75,dd,39,96,82,fe,ac,6f,3d,0c,73,40,36,37,9e,a7,ab,0e,4c,08,07,ea,c5,8f,5a,96,38,ac,ea,c9,9b,76,2a,55,64,da,31,37,3a,6b,2b,86,ea,3d,d8,08,bd,e1,7d,0b,c9,6d,92,31,1c,a1"
+ "00,21,00,81,04,0e,34,6f,80,42,d5,ef,7d,b1,5c,1b,33,e4,d2,6e,8a,b9,26,ad,a9,fa,85,a2,72,d8,f8,6a,a9,ce,2a,3d,13,a6,d2,25,23,a5,23,ab,ab,40,d5,e4,c5,04,ff,41,e1,bf,3b,ce,4a,a9,12,5a,be,e7,01,e7,ce,d5,ba,2f,9a,5f,85,a3,96,13,f8,a5,2c,64,93,18,2b,b0,e5,0e,d0,9b,ef,d6,63,90,db,d3,6e,bb,0b,f4,65,4d,bc,e9,b2,50,9b,fe,3f,2c,46,d5,99,fa,3a,c2,31,72,4e,f8,ed,c2,7f,20,67,8e,bf,b8,5c,03,ef,c9,ef,6f,13,7d,69"
+ "22" "23" "24" "25" "26" "27" "28" "29" "2a" "2b" "2c" "2d" "2e" "2f"
+ "30" "31" "32" "33" "34" "35" "36" "37" "38" "39" "3a" "3b" "3c" "3d" "3e" "3f"
+ "40" "41" "42" "43" "44" "45" "46" "47" "48" "49" "4a" "4b" "4c" "4d" "4e" "4f"
+ "50" "51" "52" "53" "54" "55" "56" "57" "58" "59" "5a" "5b" "5c" "5d" "5e" "5f"
+ "60" "61" "62" "63" "64" "65" "66" "67" "68" "69" "6a" "6b" "6c" "6d" "6e" "6f"
+ "70" "71" "72" "73" "74" "75" "76" "77" "78" "79" "7a" "7b" "7c" "7d" "7e" "7f"
+ "80" "81" "82" "83" "84" "85" "86" "87" "88" "89" "8a" "8b" "8c" "8d" "8e" "8f"
+ "90" "91" "92" "93" "94" "95" "96" "97" "98" "99" "9a" "9b" "9c" "9d" "9e" "9f"
+ "a0" "a1" "a2" "a3" "a4" "a5" "a6" "a7" "a8" "a9" "aa" "ab" "ac" "ad" "ae" "af"
+ "b0" "b1" "b2" "b3" "b4" "b5" "b6" "b7" "b8" "b9" "ba" "bb" "bc" "bd" "be" "bf"
+ "c0" "c1" "c2" "c3" "c4" "c5" "c6" "c7" "c8" "c9" "ca" "cb" "cc" "cd" "ce" "cf"
+ "d0" "d1" "d2" "d3" "d4" "d5" "d6" "d7" "d8" "d9" "da" "db" "dc" "dd" "de" "df"
+ "e0" "e1" "e2" "e3" "e4" "e5" "e6" "e7" "e8" "e9" "ea" "eb" "ec" "ed" "ee" "ef"
+ "f0" "f1" "f2" "f3" "f4" "f5" "f6" "f7" "f8" "f9" "fa" "fb" "fc" "fd" "fe" "ff"
+ "01,00,01,00,e8,aa,94,5f,fb,d5,72,f6,1b,72,12,ea,6e,2c,77,9e,d6,e2,87,e3,b9,95,0d,99,76,d1,df,84,7a,4e,3a,d4,63,26,a6,02,51,28,74,2c,88,8c,75,ea,43,30,1a,4f,7a,a8,97,04,fc,01,9a,a8,ad,a0,04,56,03,ed,8d,e1,43,dc,57,73,73,2c,6c,4a,0b,64,8d,f9,9e,f1,a1,dd,6d,05,ce,48,d7,9d,b8,75,e6,f2,be,f5,cc,98,0f,37,05,06,5e,d9,1d,7a,69,5c,9c,79,36,86,2a,11,08,e5,b5,f3,f3,bd,14,83,c9,e5,04,ad,44,e6,ad,f7,4c,08,41,fe,b9,64,40,ae,ed,e6,96,e8,06,30,51,63,6f,99,09,38,a3,86,9f,70,65,05,e7,88,b7,80,bb,ce,84,7f,35,7e,51,c3,b9,19,a3,37,6d,c4,4d,ec,ea,11,f6,13,06,5f,e7,57,46,1c,da,72,f5,6f,bc,2c,2d,9c,fe,33,d4,f7,e2,ce,31,29,c4,d1,bf,f0,12,47,cc,cb,5f,d9,71,06,4b,ee,bd,f9,e7,d1,ac,8d,e5,1c,f1,4c,fa,3d,3a,72,57,7b,57,06,3b,94,00,16,24,f1,01,53,e0,34,89,2d,f8,b1,b5,6d,bc,f1,5a,ba,01,13,c3,9f,b7,d4"
+ "01,01,01,80,0b,55,f0,0b,cd,63,89,4f,97,ae,12,8f,ee,b9,58,54,27,ea,98,d5,86,d2,ce,f4,55,d9,89,e2,5b,2f,34,24,af,53,75,df,50,cd,de,6a,4f,8c,ed,fd,10,5a,95,b9,2f,fa,8b,b8,d3,fb,3d,e6,f0,6b,2b,55,e7,32,88,67,d2,c9,c2,ed,42,e4,85,51,65,7c,ee,ee,21,9d,6d,b0,28,58,17,94,30,f1,a0,20,76,ab,63,04,58,16,48,20,44,d2,7d,d8,b4,15,b3,6f,4a,b3,81,ae,f8,c5,09,c7,f2,35,1b,35,4f,1a,cb,bc,84,2b,ce,56,22,a6,f6,9f,ca,40,54,2a,65,8b,75,f6,36,9a,ab,40,ce,a7,0f,6d,d3,ef,a5,d0,6d,77,c2,98,84,dc,c3,76,73,93,05,c4,c7,27,6a,89,67,29,1f,3d,ff,e7,1e,16,3a,2c,1d,06,76,62,ef,9f,b5,dc,b3,82,79,26,07,fc,4d,48,a6,6b,f7,38,f2,07,fd,a5,75,21,ca,69,03,7a,48,1f,df,c4,c6,2a,38,d4,12,5a,e4,ba,d6,e2,bf,d9,2d,70,10,66,44,58,a2,13,05,76,a7,14,68,58,e7,ea,ec,c2,f0,2d,df,2c,79,7f,b9,70,73,2c,f3,fb,dc,72,4d,21,b8,39,d4,87,88,4e,98,e5,3f,7b,20,97,04,3d,ad,70,d1,6b,0d,30,53,d7,4c,6e,a1,01,35,5e,c9,27,0d,53,61,c4,5a,9c,87,aa,ec,01,45,aa,d1,52,b0,d4,bc,4a,56,16,8f,e1,00,ca,a1,43,14,1a,ff,1b,6d,b7,5f,b8,9d,db,d4,8d,02,2e,1a,c0,d0,58,3b,17,a9,4a,ef,c4,27,fb,be,7c,b9,78,03,39,4e,b2,03,ea,87,59,60,d7,7c,2c,3b,19,41,ae,91,29,34,32,82,cf,b7,56,9a,c8,0b,84,cf,72,40,ff,fc,fc,aa,5f,ac,d3,ce,fc,e6,c4,b3,68"
+ "01,02,02,00,8f,b3,b5,3f,0b,de,23,e1,5c,4a,77,ed,b2,4d,1c,4b,76,91,12,c4,fe,5b,15,23,13,a4,f3,b6,5b,23,8d,88,d5,77,0e,e4,1d,60,0b,58,1b,af,67,ee,31,fb,b6,ce,f5,1b,36,10,c1,f2,f0,83,e6,b9,23,13,1e,b2,9f,ae,e0,9e,42,64,4c,bd,1e,87,18,bd,a6,9b,ae,59,20,e8,9f,52,78,e6,f7,35,56,b6,3a,e6,82,8e,87,b5,c8,23,07,e1,f5,6e,95,8d,c6,83,83,88,b8,41,d8,63,58,33,fe,39,20,d4,9c,37,0e,68,5b,e9,1f,48,0e,85,d6,36,70,a2,06,a8,dc,5c,62,75,4d,bd,bd,3a,6f,03,b0,25,33,11,20,67,0f,76,23,d9,ab,5b,e9,c4,bc,ff,a8,1f,49,c0,e1,42,c7,3c,cb,25,7a,d3,c8,39,e2,f7,b1,22,ca,14,b2,3a,2e,7a,a0,80,a9,e0,dc,96,53,ca,d7,48,be,6d,bc,68,a9,38,b0,be,b0,1b,8c,85,9e,51,42,69,24,f0,28,c8,7c,f1,bc,e3,0f,1f,9c,f3,8b,3a,96,3b,52,ed,36,b1,88,10,9f,c8,02,89,2b,5a,eb,d5,fc,af,03,46,fa,cf,8a,ba,80,ae,8f,89,f7,fd,0f,77,f3,4e,24,35,32,35,e9,c4,82,97,25,51,ab,2b,01,dd,ca,53,5f,7c,3b,25,89,d2,54,69,30,48,6b,4a,03,25,dd,be,c6,ea,33,c2,86,7f,e9,d0,9b,31,fd,70,37,54,c2,8c,dc,96,6d,5a,2e,b6,c2,6d,85,ee,f2,32,b8,95,b0,66,40,44,1e,a2,bf,25,ed,1f,41,9d,37,5b,56,e0,1d,95,1d,ec,d8,f6,24,68,d4,06,17,16,7e,8c,31,7e,40,c2,88,29,d1,f9,8e,eb,4d,4e,5a,9d,65,c8,a2,43,83,4c,04,8b,93,eb,40,23,5f,80,8f,2f,29,ff,c3,13,47,ad,b0,c1,5a,28,08,dc,1e,83,e7,ed,26,4e,30,2c,6e,5a,0e,f1,db,68,ab,89,bb,61,63,6d,55,97,b2,94,16,cd,6f,d5,60,92,e8,71,ef,a3,b2,ae,0c,40,26,d5,35,1d,c8,ed,12,94,86,8c,1c,97,bd,cc,1d,53,0f,4c,99,21,fc,34,5a,79,8c,ca,ea,ae,99,bc,8b,a9,52,fe,f9,63,75,6f,7d,51,79,e6,ca,92,6c,b8,7e,7b,20,a9,c0,2a,15,1d,bb,c0,c2,b1,52,42,7f,dd,1c,8d,e5,a7,7f,26,f5,29,cb,4b,91,5b,80,c2,3a,94,e8,c5,2f,6d,7a,0d"
+ "01,03,03,00,13,37,f3,03,0c,1f,cf,3d,2f,9c,e1,aa,a2,d5,90,ab,4a,e0,e6,b3,87,d2,a2,16,1e,26,7b,21,17,7d,82,39,ce,d4,50,94,17,b4,d0,5a,37,6e,ba,82,2b,fa,0f,7c,b6,e2,1d,01,7d,40,ca,a9,c3,fb,0d,4e,ef,ce,8a,b8,f8,61,54,14,02,6c,50,f9,dd,86,a8,2c,a8,5b,06,ff,60,4d,19,a9,ff,77,77,ba,6d,96,72,b4,d2,46,71,e2,2b,45,d8,5e,1f,84,64,07,ef,56,f9,64,1b,11,ff,ad,05,19,f9,2b,5d,af,50,91,24,c1,ca,ff,c8,78,92,32,13,fc,90,f3,12,24,62,c6,97,7f,5d,73,90,70,72,43,e2,bc,90,3f,3b,a4,85,3e,53,2e,43,a2,4f,c6,c6,38,88,0b,07,52,3d,98,b7,e3,4d,24,86,02,86,36,b8,2c,fa,49,28,e2,b9,a8,8c,75,16,32,8b,c8,e4,90,47,ba,d8,da,a6,ae,2e,af,4c,1e,ae,a1,99,70,c9,cf,1d,a8,e1,5c,fc,1f,61,25,f8,e5,5c,d2,27,8c,32,a6,28,51,42,91,91,08,e5,8f,48,d0,33,ad,7f,45,1a,5f,ee,30,f7,29,2c,23,88,b0,5c,6e,76,2d,56,7c,bc,63,73,a0,d6,13,71,58,82,91,79,4c,9b,aa,22,05,61,48,b5,51,af,d0,0e,9c,7d,94,a7,f5,6a,b9,cb,57,97,55,ca,d1,cc,b8,f5,3e,f7,bc,93,05,1a,af,c4,57,54,4c,a3,83,80,53,90,ac,16,5b,ec,6d,5f,82,83,e5,ca,fa,12,c2,8d,2b,a6,36,a8,b2,38,50,fc,f0,a5,fb,52,2d,eb,68,95,4d,f7,94,6d,75,f7,41,1f,46,db,86,71,d0,37,16,91,34,df,2f,89,78,4c,88,27,7d,2a,46,39,f0,8b,ec,75,e1,f3,5c,3f,98,b4,03,f3,c4,ea,70,af,67,0d,ee,97,d0,31,cd,3e,c1,c9,6e,4c,97,a0,64,19,44,9f,ad,16,4c,be,10,b6,e4,cc,9c,9d,2d,4f,79,02,a4,ea,09,2c,1d,2e,fd,c2,12,1a,de,ba,c9,a1,98,77,41,1c,14,56,ca,d9,19,02,46,87,7c,8d,a1,c4,3f,90,99,ca,2e,99,18,40,7e,ae,93,91,c3,4a,5f,68,f8,62,f9,34,83,ae,2e,64,c6,cf,a7,6d,80,eb,28,8b,ac,90,3b,1a,a2,a2,13,26,f3,91,40,bb,3a,44,2b,d2,0c,58,74,fc,9d,60,a9,d2,a6,34,c4,21,65,f6,00,c2,73,e1,e4,29,9d,c8,a9,88,33,38,c7,dd,83,23,d8,4b,66,d5,7c,78,7f,c3,62,23,34,12,1a,ee,a1,62,84,fe,62,3a,09,6b,72,69,58,d8,1b,fd,b0,89,e9,e1,da,fa,35,db,83,5f,93,a5,62,ad,c7,f7,e2,a7,6d,db,00,9e,7e,ea,9f,53,ef,d4,bd,32,e7,9e,2a,d1,90,a4,37,1b,b2,cd,cc,21,28,4a,96,3f,35,54,78,88,90,3b,e5,22,94,e4,2a,9f,d2,ef,7f,75,3d,b2,83,34,fe,66,45,4c,c2,ca,06,f3,fd,46,29,6b,40,32,66,a2,64,30,16,ee,04,cb,3d,28,bd,bf,a7,f1,84,9d,23,bf,61,e1,59,c7,36,b5,60,b5,39,39,eb,fd,ff,06,9e,52,99,69,97,d4,8b,bb,8f,84,90,fd,e2,0d,fd,7b,85,49,cc,81,3c,1d,c1,37,1e,5f,34,cd,52,4f,61,9a,85,c5,29,1d,b4,42,8c,c4,8d,94,43,cb,6a,e2,af,90,a6,ec,09,89,07,ae,62,9d,66,bd,fe,87,4d,76,0c,ce,e4,70,87,74,89,02,00,6c,54,4b,86,45,b5,f2,d6,fe,6e,f1,74,ae,c5,1f,67,f0,19,44,44,32,5d,d1,8a,a4,71,17,b0,9c,a4,5d,90,d4,29,b6,24"
+ "01,04,04,00,67,47,f0,4b,9c,5b,75,a3,4d,9b,1f,b2,b4,32,56,a4,dd,23,69,70,4c,c3,ee,f2,0f,82,51,bc,54,8c,0d,a3,21,bf,94,88,82,7c,69,e8,55,d3,1d,8d,80,be,71,4d,4c,48,f8,ce,1e,f8,72,ac,a5,4c,74,aa,8f,a7,e0,51,99,ad,51,35,14,e7,98,02,1b,9d,07,e5,d1,07,d0,15,d2,9b,33,81,62,b7,7e,52,d5,b1,37,ea,55,f7,80,74,4c,25,cb,61,e9,75,c0,c9,7b,4e,19,4d,d1,69,46,ca,01,c9,14,06,a8,17,e0,f4,e5,c4,5d,e9,f6,2a,d5,02,b8,8b,6e,4a,26,ec,8c,a4,c0,bd,17,a6,48,5c,46,4f,bf,6f,c9,f1,4a,27,fa,4c,d1,93,e7,22,8c,2b,32,55,0c,2b,c6,ea,73,19,7d,e8,b7,fc,64,0d,f0,f9,bf,0d,3a,8b,3c,a9,30,a1,03,1b,e3,1b,d6,94,a8,39,4b,23,ce,ea,7b,2a,3a,af,4f,6c,15,cd,13,ca,67,84,05,9c,a7,d0,f6,7f,97,0b,e0,b3,bb,fd,ca,10,f6,35,57,5f,9b,e7,c2,5f,5c,16,f8,31,0c,23,34,7b,0b,f0,d1,b0,e4,e6,6a,45,db,32,be,fa,fc,92,df,01,3d,ca,bc,c8,d2,c9,57,8e,6b,eb,7b,f4,8c,23,b4,cf,16,73,a3,20,50,e7,f6,98,7a,19,f8,be,e4,72,3f,45,e7,e9,df,69,10,dd,72,24,94,d4,ce,c9,70,13,49,9d,af,bd,61,7a,a8,ee,82,9f,ce,2e,0f,4f,cf,c0,26,9b,98,a6,9e,a7,06,ed,b6,d7,f0,db,c6,c4,f0,db,55,94,87,92,af,11,dc,07,47,eb,e4,b5,3b,c8,5a,24,31,f2,d7,06,c5,a5,19,80,75,88,5e,45,f1,0f,e0,94,ea,9f,1b,65,4d,1a,ec,18,db,b0,c8,05,ca,25,46,6a,85,8a,49,d1,e7,06,9d,84,1f,ca,7e,48,02,34,b2,0d,4c,5e,61,d5,5d,b5,51,8c,19,18,2c,87,9e,69,b2,81,c1,4c,62,09,25,1f,e9,8d,0b,23,81,d3,36,a1,c5,41,f8,db,c6,8c,cf,1c,55,54,41,d0,5b,92,a8,3f,a5,ae,dd,69,98,c4,f3,8f,7b,26,70,43,f6,62,e5,89,4f,e4,cb,c7,de,63,13,f7,a9,6b,51,e4,41,dc,fe,9e,50,32,32,32,04,bd,d2,d7,8b,4d,29,9a,78,91,28,6e,56,30,5e,89,ba,1e,62,c5,8a,27,05,bc,ad,1e,2c,d1,cf,d4,bc,c0,69,a7,2d,3f,07,3c,77,f9,69,ca,16,1f,a7,14,4e,c8,0b,fa,e7,3a,9e,38,a6,c0,aa,b6,1e,66,30,a8,18,51,8f,76,27,fa,5c,c2,07,e8,e6,f0,98,6e,bb,b0,d7,53,d3,db,d4,2e,d6,1f,83,49,23,a3,1f,c4,0c,12,8c,67,ed,1c,01,a6,40,a8,ad,68,9a,6e,af,ee,ad,5f,d0,78,5f,15,5d,09,8e,e6,80,a4,f0,f3,c8,55,27,f1,44,6f,58,07,16,ed,87,1f,8e,26,d6,3c,a0,17,2e,79,d0,72,12,dc,81,d5,ae,a0,ad,86,31,8e,6d,45,d7,d1,3a,94,e7,e5,7b,3d,b7,5f,50,3c,af,e8,ea,2b,f0,e2,3c,eb,14,b6,16,31,0c,70,3b,92,e8,a2,f9,84,d1,aa,ba,73,80,89,ec,54,3c,23,a9,d5,87,87,b9,27,9a,87,bb,c5,06,96,9a,37,2b,d8,d9,af,32,e8,fd,8d,b0,49,c1,cb,81,bc,0d,0b,fe,dc,40,fb,b1,50,41,ed,71,3b,87,cc,95,6d,df,80,85,92,c6,66,cb,4c,75,16,46,f1,b1,08,ed,be,91,21,c5,b0,e8,83,58,96,24,16,28,15,e2,fe,94,e4,42,99,84,77,43,7b,1f,ac,a7,55,ff,33,09,6a,6e,b4,66,21,d6,c0,6f,88,35,94,6f,ab,1d,c6,74,7b,4c,30,a9,e0,70,36,7f,94,aa,c0,c7,98,71,ec,10,c9,96,86,32,08,83,37,16,60,cf,19,f0,19,11,4c,f4,65,87,d8,5f,16,ad,c6,80,89,1d,37,d6,26,91,bf,ef,de,47,62,c5,05,b8,b9,c1,a8,6c,19,ec,80,af,ec,dd,d8,ee,d3,c4,b5,13,77,88,20,fe,68,64,b3,bd,f1,90,67,c4,d7,29,e5,b9,4e,7c,29,34,a8,14,4f,09,60,9b,5f,87,c5,23,d2,49,da,e6,da,2a,cf,c4,c6,3d,c8,9a,5f,37,ca,fb,08,d0,28,1e,88,f0,30,37,74,b0,c3,8f,3f,2c,b3,bc,39,3a,96,27,d6,c0,c7,91,bb,d1,fc,f0,28,be,82,3b,ac,2b,28,72,9d,31,2d,42,5d,d8,36,d8,a8,c9,ca,58,b9,f9,4a,14,b8,38,52,c9,ea,aa,8d,05,52,d5,4b,22,87,8f,09,d3,0d,c9,16,f1,d3,26,61,e5,5c,bd,84,64,88,7d,32,8d,ea,6d,8a,00,dc,54,a5,75,50,a4,3b,99,33,b1,e2,ef,8d,e5,f6,78,d8,dd,71,1a,64,02,6f,ac,37,a5,2a,fc,5d,c8,af,f9,87,3b,77,f3,1c,2c,cc,db,a6"
+ "105" "106" "107" "108" "109" "10a" "10b" "10c" "10d" "10e" "10f" )
+ 
